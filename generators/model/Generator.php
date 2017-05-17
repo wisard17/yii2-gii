@@ -837,7 +837,7 @@ class Generator extends \yii\gii\Generator
      * @param bool $useSchemaName should schema name be included in the class name, if present
      * @return string the generated class name
      */
-    protected function generateClassName($tableName, $useSchemaName = null)
+    public function generateClassName($tableName, $useSchemaName = null)
     {
         if (isset($this->classNames[$tableName])) {
             return $this->classNames[$tableName];

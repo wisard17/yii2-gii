@@ -132,4 +132,56 @@ class DefaultController extends Controller
             throw new NotFoundHttpException("Code generator not found: $id");
         }
     }
+
+    public function actionGenAll()
+    {
+        /** @var yii\gii\generators\model\Generator[] $generator */
+        $generator = [];
+
+        $db = Yii::$app->db;
+        $params['hasError'] = '';
+        $params['results'] = '';
+        $answers = null;
+        $i = 1;
+        foreach ($db->schema->getTableNames() as $tableName) {
+            $generator[$i] = new yii\gii\generators\model\Generator;
+            $generator[$i]->loadStickyAttributes();
+
+            $generator[$i]->load([
+                'Generator' => [
+                    'tableName' => $tableName,
+                    'modelClass' => $generator[$i]->generateClassName($tableName),
+                    'ns' => 'common\modelsDB',
+                    'baseClass' => 'yii\db\ActiveRecord',
+                    'db' => 'db',
+                    'useTablePrefix' => 0,
+                    'generateRelations' => 'all',
+                    'generateLabelsFromComments' => 0,
+                    'generateQuery' => 0,
+                    'queryNs' => 'common\modelsDB',
+                    'queryClass' => $tableName . 'Query',
+                    'queryBaseClass' => 'yii\db\ActiveQuery',
+                    'enableI18N' => 1,
+                    'messageCategory' => 'app',
+                    'useSchemaName' => 1,
+                    'template' => 'default',
+                ],
+                'generate' => null,
+
+            ]);
+
+            if ($generator[$i]->validate()) {
+                $generator[$i]->saveStickyAttributes();
+                $files = $generator[$i]->generate();
+
+                $params['hasError'] .= !$generator[$i]->save($files, [$files[0]->id => 1], $results);
+                $params['results'] .= $results;
+
+            }
+            $i++;
+        }
+        $params = ['generator' => $generator[1], 'id' => 'model'];
+
+        return $this->render('view', $params);
+    }
 }
